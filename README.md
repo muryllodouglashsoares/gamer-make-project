@@ -171,4 +171,4 @@ GitHub: [@muryllodouglashsoares](https://github.com/muryllodouglashsoares)
 
 ## 📄 Licença
 
-Defina aqui a licença do projeto (por exemplo, MIT) e adicione um arquivo `LICENSE` na raiz do repositório.
+Este projeto está sob a licença descrita no arquivo [LICENSE](LICENSE).
