@@ -35,13 +35,16 @@ O jogo mistura narrativa em *cutscenes* com uma **batalha de chefe em três fase
 
 | Tecla / ação | Função |
 |---|---|
-| `W` `A` `S` `D` | Mover a Prof. Clara |
+| `W` `A` `S` `D` (ou setas) | Mover a Prof. Clara (mesma velocidade nas diagonais) |
 | `Espaço` | Atirar lápis (na direção do mouse) |
 | `Mouse` | Mirar |
 | `Enter` | Iniciar o jogo (menu) / reiniciar após morrer |
 | `Espaço`, `Enter` ou clique | Avançar os diálogos das cutscenes |
-| `F` / `G` | Ativar / desativar tela cheia |
-| `Backspace` | Voltar ao menu |
+| `F` / `G` / `F11` | Tela cheia / janela (funciona em qualquer tela) |
+| `Shift` ou botão direito | Esquivar (curta, com recarga e proteção temporária) |
+| `Esc`, `P` ou `Backspace` | Pausar (continuar, volume, som, reiniciar luta, menu principal) |
+| `M` | Silenciar / reativar o som |
+| Botão esquerdo | Também atira (alternativa ao `Espaço`) |
 
 ---
 
@@ -51,6 +54,8 @@ O jogo mistura narrativa em *cutscenes* com uma **batalha de chefe em três fase
 - **100 HP**, com regeneração de 5 HP a cada 5 segundos.
 - Atira lápis na direção do mouse (**20 de dano** por acerto).
 - Após receber dano de inimigos, fica invulnerável por 1 segundo.
+- **Esquiva** (`Shift`): ~180 px em 9 frames, recarga de 1,25 s e proteção durante o movimento.
+- Os lápis também **anulam as bolas de fogo** do chefe e param nas tochas.
 - Limitada à área da arena, com tochas nas bordas funcionando como obstáculos.
 
 ### Chefe (Pedro)
@@ -58,10 +63,10 @@ O chefe tem **1000 HP** e dispara rajadas circulares de projéteis. A luta muda 
 
 | Fase | Gatilho | O que acontece |
 |---|---|---|
-| **1** | Início | Rajadas de projéteis em círculo enquanto o chefe patrulha a arena |
+| **1** | Início | O chefe patrulha, **avisa** o ataque (círculo se fechando), dispara 3 anéis de projéteis e fica vulnerável por um instante |
 | **2** | HP ≤ 75% | Chefe pausa os ataques e reaparece no centro; surgem **mobs** que perseguem a jogadora e **borboletas** |
 | **2b** | HP ≤ 50% | As borboletas somem e entram **serras** quicando pela arena |
-| **3** | HP ≤ 25% | As serras somem e entram **cavaleiros** perseguidores; o chefe ganha novo visual e volta a atirar |
+| **3** | HP ≤ 25% | As serras somem e entram **cavaleiros** perseguidores; o chefe ganha novo visual, dispara anéis mais densos e um leque mirado |
 
 ### Perigos da arena
 | Perigo | Dano à jogadora |
@@ -71,9 +76,19 @@ O chefe tem **1000 HP** e dispara rajadas circulares de projéteis. A luta muda 
 | Borboleta | 5 |
 | Serra | 10 |
 | Cavaleiro | 10 |
-| Bloco caindo | 10 |
+| Bloco caindo (avisado antes) | 10 |
 
 Derrotar o chefe leva à cutscene final; zerar o HP leva à tela **"VOCÊ MORREU"**, onde `Enter` reinicia a luta.
+
+---
+
+## 🆕 Melhorias desta versão
+- **Combate**: lápis em passos curtos (sem atravessar inimigos), param nas tochas, mira com retículo, efeitos de impacto/partículas, inimigos piscam ao serem atingidos (mobs e cavaleiros agora aguentam 3 acertos).
+- **Chefe**: máquina de estados (patrulha → aviso → ataque → recuperação), transições de fase que ocorrem uma única vez, com banner, som e pausa de impacto.
+- **Justiça**: inimigos nascem piscando e inofensivos, longe da jogadora; blocos caindo têm aviso; bugs de borboletas/serras presas fora da sala corrigidos.
+- **Experiência**: contagem "PREPARE-SE", painel de controles que se marca sozinho, pausa completa, volume/mudo, esquiva com HUD de recarga.
+- **Áudio**: efeitos e músicas **sintetizados por script** (placeholders em `sounds/`); substitua pelos seus arquivos mantendo os nomes dos recursos.
+- Todos os valores de balanceamento ficam em `global.cfg` (`scripts/src_jogo`).
 
 ---
 
@@ -105,7 +120,7 @@ Menu ──Enter──▶ Cutscene de introdução ──▶ Arena do chefe ─�
    ```bash
    git clone https://github.com/muryllodouglashsoares/gamer-make-project.git
    ```
-2. Abra o arquivo **`woman-importance.yyp`** no GameMaker.
+2. No GameMaker, use **File ▸ Open** e abra **`SNCT_att_ataques_OFC.yyz`** (pacote do projeto; o GameMaker oferece extraí-lo). A pasta `projeto-extraido/` contém os mesmos arquivos soltos, com o `SNCT_att.yyp`.
 3. Pressione **F5** (ou clique em ▶ *Run*) para compilar e jogar.
 
 ---
@@ -127,7 +142,8 @@ Menu ──Enter──▶ Cutscene de introdução ──▶ Arena do chefe ─�
 ### Principais objetos
 | Objeto | Responsabilidade |
 |---|---|
-| `obj_player` | Movimento, vida, animações e colisões do jogador |
+| `obj_player` | Movimento, esquiva, vida, animações e colisões do jogador |
+| `obj_controle` | Pausa, tutorial, avisos de fase, mira, efeitos e fim de partida (criado pela jogadora) |
 | `obj_arma` / `obj_balaplayer` | Disparo dos lápis e dano causado |
 | `obj_boss` | IA do chefe, fases, HUD da barra de vida |
 | `obj_mob`, `obj_cavaleiro` | Inimigos que perseguem o jogador |
@@ -138,7 +154,7 @@ Menu ──Enter──▶ Cutscene de introdução ──▶ Arena do chefe ─�
 
 ### Scripts
 - **`src_cenas`**: define os diálogos (`cenas_intro`, `cenas_final`) e inicia cutscenes com `cena_iniciar`.
-- **`src_balas`**: `bala_acertou`, que aplica dano, cria o efeito de impacto e destrói o projétil.
+- **`src_jogo`**: configuração de balanceamento (`global.cfg`), áudio, partículas, pausa/hit-stop, dano da jogadora, `bala_acertou` e as funções da IA do chefe.
 - **`Script1`**: função `approach`, usada na barra de vida do chefe.
 
 ---
