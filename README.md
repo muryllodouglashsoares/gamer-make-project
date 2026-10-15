@@ -33,18 +33,21 @@ O jogo mistura narrativa em *cutscenes* com uma **batalha de chefe em três fase
 
 ## 🕹️ Controles
 
-| Tecla / ação | Função |
-|---|---|
-| `W` `A` `S` `D` (ou setas) | Mover a Prof. Clara (mesma velocidade nas diagonais) |
-| `Espaço` | Atirar lápis (na direção do mouse) |
-| `Mouse` | Mirar |
-| `Enter` | Iniciar o jogo (menu) / reiniciar após morrer |
-| `Espaço`, `Enter` ou clique | Avançar os diálogos das cutscenes |
-| `F` / `G` / `F11` | Tela cheia / janela (funciona em qualquer tela) |
-| `Shift` ou botão direito | Esquivar (curta, com recarga e proteção temporária) |
-| `Esc`, `P` ou `Backspace` | Pausar (continuar, volume, som, reiniciar luta, menu principal) |
-| `M` | Silenciar / reativar o som |
-| Botão esquerdo | Também atira (alternativa ao `Espaço`) |
+| Ação | Teclado / mouse | Controle (gamepad) |
+|---|---|---|
+| Mover | `W` `A` `S` `D` ou setas | Analógico esquerdo / direcional |
+| Mirar | Mouse | Analógico direito (zona morta configurável) |
+| Atirar lápis | `Espaço` ou botão esquerdo | `RT` |
+| Esquivar | `Shift` ou botão direito | `A` |
+| Rajada de lápis | `R` | `X` |
+| Escudo do Saber | `C` | `Y` |
+| Pulso de concentração | `V` | `B` |
+| Trocar lápis | `1`-`4`, `Q`/`E`, roda do mouse | `LB` / `RB` |
+| Pausar | `Esc`, `P`, `Backspace` | `Start` |
+| Menus / diálogos | `W`/`S`/`A`/`D`, `Enter`, clique | Direcional/analógico, `A` confirma, `B` volta |
+| Tela cheia / som | `F` `G` `F11` / `M` | — |
+
+O teclado e o mouse continuam funcionando com o controle conectado; conexão e desconexão são detectadas sem interromper a partida. **Não há remapeamento de teclas** (ver limitações).
 
 ---
 
@@ -79,6 +82,32 @@ O chefe tem **1000 HP** e dispara rajadas circulares de projéteis. A luta muda 
 | Bloco caindo (avisado antes) | 10 |
 
 Derrotar o chefe leva à cutscene final; zerar o HP leva à tela **"VOCÊ MORREU"**, onde `Enter` reinicia a luta.
+
+---
+
+## 🆕 Novidades da rodada "expansão e polimento"
+
+- **Habilidades da Prof. Clara** (HUD no canto inferior esquerdo, com recarga): **Rajada de lápis** (5 lápis em leque, 6 s), **Escudo do Saber** (2,5 s anulando projéteis do chefe, 12 s) e **Pulso de concentração** (afasta mobs e cavaleiros, sem atravessar tochas nem sair da arena; não afeta o chefe, 10 s). Parâmetros em `global.cfg.hab_*`.
+- **Chefe**: ataques variados em ciclo (anel, leque mirado, espiral; fase final com ataque misto), **janela de vulnerabilidade** após cada ataque (dano x1,5, configurável em `vuln_mult`, indicador "VULNERÁVEL!" e brilho azul).
+- **Dificuldade** (História / Normal / Desafio): altera avisos, intervalos, velocidade dos projéteis, janelas de recuperação, dano recebido, quantidade e velocidade dos inimigos. Não multiplica a vida do chefe e mantém avisos mínimos.
+- **Pontuação e nota**: sequência de acertos, bônus por esquiva precisa, resumo ao fim (tempo, dano causado/recebido, precisão, esquivas, nota S/A/B/C).
+- **Conquistas** (14) e **recordes por dificuldade**, **estatísticas históricas** e **Códice** com 7 páginas (Ada Lovelace, Katherine Johnson, Carol Shaw, Grace Hopper, Mary Jackson, Hedy Lamarr, Marie Curie): três vêm da coleta na luta; as demais por desafios (vencer, sequência de 10 acertos, 5 esquivas precisas, vencer sem morrer).
+- **Narrativa**: diálogo extra com a Ana em 50% de vida, falas curtas durante a luta (legendas que não congelam o jogo), epílogo com Ana participando da aula e Pedro mudando de atitude.
+- **Revanche** (após concluir a campanha): só a luta ou com a história, escolhendo a dificuldade; não repete recompensas.
+- **Tutorial interativo** (menu): movimento, mira/tiro, esquiva, avisos de ataque, habilidades e barra de vida; sem dano, repetível.
+- **Opções/acessibilidade**: volume geral, música e efeitos separados, reduzir flashes e partículas, alto contraste, velocidade do texto (inclui instantâneo), zona morta da mira, apagar progresso (com confirmação).
+- **Salvamento** em JSON (`woman_importance.sav`, pasta de dados do GameMaker): áudio, acessibilidade, dificuldade, conquistas, códice, recordes e estatísticas. Versionado (`SAVE_VERSAO`), tolera arquivo ausente/corrompido/campos antigos, grava ao desbloquear, ao fechar opções/pausa e ao fim da luta.
+
+### Limitações conhecidas
+- **Nada disto foi compilado nem executado**: o ambiente em que foi escrito não tem o GameMaker. A verificação foi estática (parênteses/chaves balanceados e todas as funções chamadas existem). Abra no GameMaker 2024.14+, rode (F5) e reporte erros.
+- Sem remapeamento de teclas (a tela "Como jogar" mostra os controles atuais).
+- O jogo não tem tremor de tela, então não há opção para isso; "reduzir flashes" corta partículas, vinheta de dano e piscadas do chefe.
+- Sem ponto fraco localizado: a vulnerabilidade vale para o chefe inteiro durante a recuperação.
+- Biografias do códice escritas de fatos conhecidos e conservadores, **sem nova checagem online**; confira as fontes citadas antes de publicar.
+- Sons novos reutilizam os efeitos existentes (sem áudios novos para códice/habilidades).
+
+### Estrutura nova
+`scripts/src_entrada` (teclado/mouse/gamepad), `src_save` (persistência), `src_progresso` (dificuldade, pontuação, códice, falas, habilidades, tutorial), `src_telas` (opções, códice, progresso, resumo, controles). `obj_menu` foi reescrito (telas internas); `obj_controle`, `obj_boss`, `obj_player`, `obj_arma` e outros receberam integrações.
 
 ---
 
@@ -120,7 +149,7 @@ Menu ──Enter──▶ Cutscene de introdução ──▶ Arena do chefe ─�
    ```bash
    git clone https://github.com/muryllodouglashsoares/gamer-make-project.git
    ```
-2. No GameMaker, use **File ▸ Open** e abra **`SNCT_att_ataques_OFC.yyz`** (pacote do projeto; o GameMaker oferece extraí-lo). A pasta `projeto-extraido/` contém os mesmos arquivos soltos, com o `SNCT_att.yyp`.
+2. No GameMaker, use **File ▸ Open** e abra o pacote **`.yyz`** mais recente (pacote do projeto; o GameMaker oferece extraí-lo). A pasta `projeto-extraido/` contém os mesmos arquivos soltos, com o `SNCT_att.yyp`.
 3. Pressione **F5** (ou clique em ▶ *Run*) para compilar e jogar.
 
 ---
