@@ -124,9 +124,74 @@ Derrotar o chefe leva à cutscene final; zerar o HP leva à tela **"VOCÊ MORREU
 ## 🧭 Fluxo do jogo
 
 ```
-Menu ──Enter──▶ Cutscene de introdução ──▶ Arena do chefe ──┬─▶ Cutscene final ──▶ Menu
-                                                              └─▶ Tela de morte ──Enter──▶ Arena do chefe
+Menu ─▶ Dificuldade ─▶ Introdução ─▶ Confronto 1 (Pedro) ─▶ Resultado + melhoria ─▶ Confronto 2 ─▶ Resultado + melhoria ─▶ Confronto 3 ─▶ Final ─▶ Resumo ─▶ Menu
+                                           └─ derrota ─▶ Tela de morte ─▶ repete o mesmo confronto
 ```
+
+---
+
+## 🆕 Campanha de 3 confrontos, novos chefes e melhorias
+
+O jogo agora é uma pequena campanha. **Nenhuma parte foi executada no GameMaker pelo autor desta atualização:** o código foi revisado de forma estática (veja "Verificação" abaixo) e precisa ser aberto e testado na IDE.
+
+### Fluxo
+
+`Menu → dificuldade → introdução → Confronto 1 (Pedro) → resultado + melhoria → Confronto 2 (Guardião do Preconceito) → resultado + melhoria → Confronto 3 (Autômato da Exclusão) → final → resumo da campanha`
+
+- A dificuldade escolhida no menu vale para toda a campanha (nada muda silenciosamente).
+- Em cada confronto aparecem "CONFRONTO n DE 3", o nome do chefe e o objetivo na contagem inicial; um rótulo fica no canto superior esquerdo durante a luta.
+- **Derrota:** a tela de derrota mostra o chefe e o confronto; "Tentar novamente" repete o mesmo confronto, sem avançar a campanha e sem repetir melhorias. A nota de cada confronto só penaliza as derrotas *daquele* confronto.
+- Cada vitória é somada uma única vez (há travas em `campanha_registrar_vitoria` e na escolha de melhoria).
+- Voltar ao menu encerra a campanha em andamento. **A campanha em andamento não é salva:** se fechar o jogo no meio, começa de novo.
+- Tutorial e revanche nunca iniciam a campanha.
+
+### Chefes
+
+| Confronto | Chefe | Resumo |
+|---|---|---|
+| 1 | **Pedro** | Batalha original, inalterada (3 fases, ataques, inimigos auxiliares, blocos). |
+| 2 | **Guardião do Preconceito** (1100 HP) | Desliza entre pontos da arena longe da jogadora. Ataques: *rótulos* (leques mirados lentos e anel), *faixas* (duas ondas de faixas verticais; a 2ª cobre as brechas da 1ª), *muros* (muros temporários que bloqueiam a arena e protegem dos projéteis), *cerco* (muros + leques mais rápidos), *pinça* (bordas e depois o centro). Quando o ataque acaba, os muros caem e abre-se a janela de vulnerabilidade. Fases em 66% e 33% de vida. |
+| 3 | **Autômato da Exclusão** (1200 HP) | Orbita o centro. Ataques: *salva* (rajadas mirando onde a jogadora vai estar, com linha de mira), *grade* (faixas cruzadas com espaço livre), *engrenagem* (projéteis que curvam), *sobrecarga* (anéis densos com brecha; aviso longo; o Escudo ou a esquiva resolvem), *combo* (grade + salvas, fase final). **Mecânica especial:** nas fases 2 e 3 ele fica **blindado** até a jogadora quebrar 3 módulos de energia (a Rajada ajuda); ao quebrar o escudo ele fica atordoado e vulnerável por mais tempo. Fases em 66% e 33%. |
+
+Os dois são personagens fictícios. Reutilizam a máquina de estados de `obj_boss` (são objetos-filho): entrada, patrulha, preparando, atacando, recuperando, transição e derrotado. "Recuperando" é a janela de vulnerabilidade (dano x1.5). Os avisos têm tempo mínimo (`zona_aviso_min`, `tele_min`) em todas as dificuldades e não dependem só de cor: hachura diagonal, ícone "!" ou "MURO", texto de alerta e linha de mira. Nos confrontos 2 e 3 não caem blocos, para os avisos ficarem legíveis; cada confronto tem tochas extras e um visual próprio (tinta das camadas e decoração do piso).
+
+### Melhorias (bônus temporários da campanha)
+
+Após vencer os confrontos 1 e 2, a tela de preparo oferece 3 melhorias (uma de cada categoria) e é obrigatório escolher uma, com confirmação. Não há duplicatas na mesma campanha. Valores em `global.cfg.mel` (`src_jogo`); os efeitos são aplicados por `campanha_aplicar_melhorias()` sobre os valores originais, então nunca se acumulam por engano.
+
+| Categoria | Melhoria | Efeito real |
+|---|---|---|
+| Sobrevivência | Reserva de vida | Vida máxima 100 → 120 |
+| Sobrevivência | Recuperação aprimorada | Cura 7 a cada 4,25 s (antes: 5 a cada 5 s) |
+| Combate | Precisão aprimorada | Dano do lápis 20 → 25 |
+| Combate | Rajada reforçada | Rajada dispara 7 lápis (antes: 5) |
+| Mobilidade e defesa | Esquiva aprimorada | Recarga da esquiva 1,25 s → 0,92 s (a proteção continua só durante o movimento) |
+| Mobilidade e defesa | Escudo otimizado | Escudo dura 2,5 s → 3,2 s e recarrega em 10,5 s (antes: 12 s) |
+
+Há limites máximos/mínimos em `cfg.mel.lim`. A **revanche** e o tutorial usam sempre os valores originais (sem melhorias).
+
+### Revanche
+
+Depois de vencer um confronto ele fica liberado na revanche (quem já tinha concluído o jogo antes mantém a revanche contra o Pedro). Com mais de um chefe liberado aparece a escolha do chefe. "Só a luta" ou "com a história". A revanche não concede melhorias. O duelo isolado com o Pedro continua tendo recordes próprios; a revanche dos outros chefes não altera recordes.
+
+### Salvamento (versão 2)
+
+- `SAVE_VERSAO` passou de 1 para 2. Campos novos com valores padrão seguros: `rec_pedro` (recordes do duelo com o Pedro) e `campanha` (`concluida`, `vitorias`, `chefes` [0/1 por confronto], `melhorias_usadas`, só histórico: não concede bônus).
+- `rec` agora guarda os recordes da **campanha completa** (tempo total e média dos 3 confrontos para a nota).
+- **Migração v1 → v2** (`save_migrar`): o `rec` antigo vai para `rec_pedro`; `campanha_completa` verdadeiro marca o Pedro como derrotado. Opções, conquistas, códice e estatísticas são preservados pela mesclagem existente. Não foi possível reproduzir um arquivo `.sav` real aqui; a migração só foi revisada no código.
+- Nada de instâncias ou IDs temporários é salvo.
+
+### Arquivos novos e alterados
+
+- **Novos:** `scripts/src_campanha` (estado, melhorias, fluxo, arena, HUD), `scripts/src_chefes` (IA dos dois chefes), `obj_boss2`, `obj_boss3`, `obj_zona`, `obj_muro`, `obj_modulo`, `obj_decor`, `obj_preparo`, `rm_preparo`, sprites `spr_guardiao`, `spr_guardiao_atq`, `spr_automato`, `spr_automato_atq`, `spr_muro` (pixel art gerada por script, com 4 quadros de animação).
+- **Alterados:** `src_jogo` (balanceamento novo, limpeza no fim da luta, blindagem do chefe, painel de cientista só na 1ª vez), `src_progresso` (`partida_encerrar` por confronto), `src_save` (v2 e migração), `src_telas` (recordes e resumo), `src_cenas` (cenas dos novos confrontos), `obj_boss` (redireciona para o chefe do confronto), `obj_player` (aplica melhorias), `obj_controle`, `obj_menu`, `obj_morte`, `obj_spawner`, `obj_balaboss` (`giro` e `vida` opcionais).
+
+### Verificação e limitações
+
+- Feito: revisão estática (chaves/parênteses balanceados, todas as funções chamadas existem no projeto ou são nativas do GML, `.yy` novos validados como JSON e comparados com recursos existentes, registro no `.yyp`).
+- **Não feito:** compilar e executar no GameMaker; testes de jogo (fluxo completo, derrotas, dificuldades, gamepad, pausa, salvamento real). Isso precisa ser validado na IDE.
+- Se o GameMaker reclamar de algum recurso novo ao abrir, o `.resource_order` do projeto é regenerado automaticamente.
+- Balanceamento (HP, avisos, dano) não foi jogado; ajuste em `global.cfg` (`boss2`, `boss3`, `mel`).
 
 ---
 
